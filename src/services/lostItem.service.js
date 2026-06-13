@@ -1,6 +1,6 @@
 // services/lostItem.service.js
 
-const LostItem = require("../models/LostItem");
+const LostItem = require("../models/lostitem");
 const fs = require("fs").promises;
 const path = require("path");
 

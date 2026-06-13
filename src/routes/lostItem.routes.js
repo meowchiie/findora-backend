@@ -4,9 +4,11 @@ const express = require("express");
 const router = express.Router();
 
 const LostItemController = require("../controllers/lostItem.controller");
+const { uploadLostItemMiddleware } = require("../middlewares/upload.middleware");
+const { validateLostItem } = require("../validators/lostitem.validator");
 
 // CREATE
-router.post("/", LostItemController.create);
+router.post("/", uploadLostItemMiddleware, validateLostItem, LostItemController.create);
 
 // GET ALL
 router.get("/", LostItemController.getAll);
@@ -15,7 +17,7 @@ router.get("/", LostItemController.getAll);
 router.get("/:id", LostItemController.getById);
 
 // UPDATE
-router.put("/:id", LostItemController.update);
+router.put("/:id", uploadLostItemMiddleware, validateLostItem, LostItemController.update);
 
 // DELETE
 router.delete("/:id", LostItemController.delete);

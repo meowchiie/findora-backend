@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const db = require('./config/database');
-const User = require('./src/models/User');
+const User = require('./src/models/user');
 
 const lostItemRoutes = require("./src/routes/lostItem.routes");
 
@@ -22,32 +22,20 @@ app.use(express.json());
 // DATABASE CONNECTION
 // =========================
 async function connectDatabase() {
-
     try {
-
-        // Test koneksi database
+        // Hanya test koneksi database, TIDAK MENGGUNAKAN sync() lagi
         await db.authenticate();
-
-        console.log('✅ Database connected');
-
-        // Sinkronisasi tabel
-        await db.sync({ alter: true });
-
-        console.log('✅ Database synced');
+        console.log('✅ Database connected successfully (No Sync)');
 
     } catch (error) {
-
         console.error('❌ Database not ready:', error.message);
-
         console.log('🔄 Retrying connection in 5 seconds...');
-
         setTimeout(connectDatabase, 5000);
     }
 }
 
 // Jalankan koneksi database
 connectDatabase();
-
 
 // =========================
 // ROUTES

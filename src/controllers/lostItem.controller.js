@@ -15,7 +15,7 @@ class LostItemController {
         lost_date: req.body.lost_date,
         lost_time: req.body.lost_time,
         contact: req.body.contact,
-        photo_path: req.file ? req.file.path : null, // Ambil path file dari Multer jika ada
+        photo_path: req.file ? req.file.path.replace(/\\/g, '/') : null, // Ambil path file dari Multer jika ada
       };
 
       const result = await LostItemService.create(payload);

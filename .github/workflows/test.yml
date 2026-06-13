@@ -1,0 +1,55 @@
+name: Node.js CI (Findora Test Pipeline)
+
+on:
+  push:
+    branches: [ main, master, development ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      # Sediakan database MySQL bayangan di GitHub Runner untuk keperluan testing
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: database_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js Environment
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Run Sequelize Migrations
+      run: npx sequelize-cli db:migrate
+      env:
+        NODE_ENV: test
+        DB_USERNAME: root
+        DB_PASSWORD: root
+        DB_NAME: database_test
+        DB_HOST: 127.0.0.1
+        DB_DIALECT: mysql
+
+    - name: Execute Jest Regression Test Suite
+      run: npm run test:coverage
+      env:
+        NODE_ENV: test
+        DB_USERNAME: root
+        DB_PASSWORD: root
+        DB_NAME: database_test
+        DB_HOST: 127.0.0.1
+        DB_DIALECT: mysql
