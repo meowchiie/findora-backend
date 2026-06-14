@@ -4,7 +4,7 @@ const { body, validationResult } = require('express-validator');
 const fs = require('fs').promises;
 
 const validateLostItem = [
-    body('name').notEmpty().withMessage('Nama barang wajib diisi').trim(),
+    // body('name').notEmpty().withMessage('Nama barang wajib diisi').trim(),
     body('description').notEmpty().withMessage('Deskripsi wajib diisi').trim(),
     body('category').notEmpty().withMessage('Kategori wajib diisi').trim(),
     body('location').notEmpty().withMessage('Lokasi wajib diisi').trim(),

@@ -1,21 +1,20 @@
 // controllers/lostItem.controller.js
 
 const LostItemService = require("../services/lostItem.service");
+// 1. Import matchedData dari express-validator 👇
+const { matchedData } = require("express-validator"); 
 
 class LostItemController {
 
   static async create(req, res) {
     try {
-      // 1. Map data dari FormData Frontend (Bahasa Indonesia) ke Model Sequelize (Bahasa Inggris)
+      // 2. Ambil hanya data yang tervalidasi oleh validator
+      const validatedData = matchedData(req);
+
+      // 3. Gabungkan data teks yang sudah valid dengan path file dari Multer
       const payload = {
-        name: req.body.name,          // Menampung jika ada fallback atau penamaan yang sama
-        description: req.body.description,
-        category: req.body.category,
-        location: req.body.location,
-        lost_date: req.body.lost_date,
-        lost_time: req.body.lost_time,
-        contact: req.body.contact,
-        photo_path: req.file ? req.file.path.replace(/\\/g, '/') : null, // Ambil path file dari Multer jika ada
+        ...validatedData,
+        photo_path: req.file ? req.file.path.replace(/\\/g, '/') : null,
       };
 
       const result = await LostItemService.create(payload);
@@ -77,20 +76,16 @@ class LostItemController {
 
   static async update(req, res) {
     try {
-      // 2. Pemetaan yang sama juga berlaku untuk proses Update/Edit data
+      // 4. Terapkan hal yang sama pada fungsi update untuk mengambil data tervalidasi
+      const validatedData = matchedData(req);
+
       const payload = {
-        name: req.body.name,
-        description: req.body.description,
-        category: req.body.category,
-        location: req.body.location,
-        lost_date: req.body.lost_date,
-        lost_time: req.body.lost_time,
-        contact: req.body.contact,
+        ...validatedData
       };
 
       // Jika user mengunggah foto baru saat update, masukkan ke dalam payload
       if (req.file) {
-        payload.photo_path = req.file.path;
+        payload.photo_path = req.file.path.replace(/\\/g, '/');
       }
 
       const result = await LostItemService.update(req.params.id, payload);
