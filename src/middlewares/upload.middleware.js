@@ -2,28 +2,14 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// 1. Konfigurasi Storage Universal untuk Items
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        // Folder penyimpanan disatukan agar rapi
-        const uploadDir = path.join('public', 'uploads', 'items');
-        
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-        cb(null, uploadDir); 
-    },
-    filename: (req, file, cb) => {
-        // Membaca type dari body (Syarat: Di Frontend, field text 'type' harus dikirim SEBELUM file)
-        // Nilai type berdasarkan ERD adalah 'hilang' atau 'ditemukan'
-        const prefix = req.body.type === 'ditemukan' ? 'found-item' : 'lost-item';
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const ext = path.extname(file.originalname);
-        
-        cb(null, `${prefix}-${uniqueSuffix}${ext}`);
+// Fungsi pembantu untuk membuat direktori jika belum ada
+const createDir = (dirPath) => {
+    if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
     }
-});
+};
 
+// Filter file universal (Hanya gambar)
 const fileFilter = (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|webp/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -38,36 +24,73 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-const uploadPhotoInstance = multer({
-    storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // Maksimal 5MB
-    fileFilter: fileFilter
+// Batasan ukuran file (5MB)
+const limits = { fileSize: 5 * 1024 * 1024 };
+
+// ==========================================
+// 1. KONFIGURASI UNTUK ITEMS
+// ==========================================
+const itemStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadDir = path.join('public', 'uploads', 'items');
+        createDir(uploadDir);
+        cb(null, uploadDir); 
+    },
+    filename: (req, file, cb) => {
+        const prefix = req.body.type === 'ditemukan' ? 'found-item' : 'lost-item';
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `${prefix}-${uniqueSuffix}${path.extname(file.originalname)}`);
+    }
 });
 
-// 2. Wrapper Middleware untuk Item Photo
-const uploadItemMiddleware = (req, res, next) => {
-    // Menggunakan .single('item_photo') karena sekarang field di database sudah disatukan
-    const upload = uploadPhotoInstance.single('photo_path');
+const uploadItemInstance = multer({ storage: itemStorage, limits, fileFilter });
 
-    upload(req, res, (err) => {
-        if (err instanceof multer.MulterError) {
-            if (err.code === 'LIMIT_FILE_SIZE') {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Ukuran file terlalu besar! Maksimal batas ukuran adalah 5MB.'
-                });
-            }
-            return res.status(400).json({ success: false, message: err.message });
-        } else if (err) {
-            // Menangkap error dari fileFilter
-            if (err.code === 'LIMIT_FILE_TYPES') {
-                 return res.status(400).json({ success: false, message: err.message });
-            }
-            return res.status(500).json({ success: false, message: err.message });
-        }
-        
+const uploadItemMiddleware = (req, res, next) => {
+    uploadItemInstance.single('photo_path')(req, res, (err) => {
+        if (err) return handleMulterError(err, res, next);
         next();
     });
 };
 
-module.exports = { uploadItemMiddleware };
+// ==========================================
+// 2. KONFIGURASI UNTUK CLAIMS (BUKTI FOTO)
+// ==========================================
+const claimStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadDir = path.join('public', 'uploads', 'claims');
+        createDir(uploadDir);
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `proof-${uniqueSuffix}${path.extname(file.originalname)}`);
+    }
+});
+
+const uploadClaimInstance = multer({ storage: claimStorage, limits, fileFilter });
+
+const uploadClaimMiddleware = (req, res, next) => {
+    uploadClaimInstance.single('proof_photo_path')(req, res, (err) => {
+        if (err) return handleMulterError(err, res, next);
+        next();
+    });
+};
+
+// Fungsi penanganan error multer universal
+const handleMulterError = (err, res, next) => {
+    if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({
+                success: false,
+                message: 'Ukuran file terlalu besar! Maksimal batas ukuran adalah 5MB.'
+            });
+        }
+        return res.status(400).json({ success: false, message: err.message });
+    }
+    if (err.code === 'LIMIT_FILE_TYPES') {
+        return res.status(400).json({ success: false, message: err.message });
+    }
+    return res.status(500).json({ success: false, message: err.message });
+};
+
+module.exports = { uploadItemMiddleware, uploadClaimMiddleware };

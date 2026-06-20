@@ -8,9 +8,11 @@ const db = require('./config/database');
 const User = require('./src/models/user');
 
 // Import Routes
-const itemRoutes = require("./src/routes/item.routes");
-const categoryRoutes = require("./src/routes/category.routes");
 const userRoutes = require("./src/routes/user.routes");
+const categoryRoutes = require("./src/routes/category.routes");
+const itemRoutes = require("./src/routes/item.routes");
+const claimRoutes = require("./src/routes/claim.routes");
+const verificationRoutes = require("./src/routes/verification.routes");
 
 const app = express();
 
@@ -53,6 +55,8 @@ app.get('/', (req, res) => {
 app.use("/api", userRoutes);
 app.use("/api/items", itemRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/claims", claimRoutes);
+app.use("/api/verifications", verificationRoutes);
 
 
 // =========================

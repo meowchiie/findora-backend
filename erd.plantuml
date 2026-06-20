@@ -47,7 +47,7 @@ entity "CLAIMS" as claims {
   *item_id : integer <<FK>>
   *user_id : integer <<FK>>
   *proof_of_ownership : text
-  *proof_photo : text
+  *proof_photo_path : text
   *status : string (Menunggu Verifikasi/Disetujui/Ditolak)
   *created_at : timestamp
   *updated_at : timestamp
