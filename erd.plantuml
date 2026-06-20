@@ -1,0 +1,80 @@
+@startuml erd
+title ERD FINDORA (Lost and Found ITH) - Merged Items
+
+' Definisi Tabel (Entitas)
+entity "USERS" as users {
+  *id : integer <<PK>>
+  --
+  *name : string
+  *email : string <<UNIQUE>>
+  *nim : string <<UNIQUE>>
+  *password : text
+  *role : string (Mahasiswa/Admin)
+  profile_picture : text
+  *created_at : timestamp
+  *updated_at : timestamp
+}
+
+entity "CATEGORIES" as categories {
+  *id : integer <<PK>>
+  --
+  *name : string
+  *created_at : timestamp
+  *updated_at : timestamp
+}
+
+entity "ITEMS" as items {
+  *id : integer <<PK>>
+  --
+  *user_id : integer <<FK>>
+  *category_id : integer <<FK>>
+  *type : string (hilang/ditemukan)
+  *name : string
+  *description : text
+  *location : string
+  *lost_date : date
+  *lost_time : time
+  *contact : string
+  photo_path : text
+  *status : string (Menunggu/Ditemukan/Diamankan/Diklaim/Selesai)
+  *created_at : timestamp
+  *updated_at : timestamp
+}
+
+entity "CLAIMS" as claims {
+  *id : integer <<PK>>
+  --
+  *item_id : integer <<FK>>
+  *user_id : integer <<FK>>
+  *proof_of_ownership : text
+  *proof_photo : text
+  *status : string (Menunggu Verifikasi/Disetujui/Ditolak)
+  *created_at : timestamp
+  *updated_at : timestamp
+}
+
+entity "VERIFICATIONS" as verifications {
+  *id : integer <<PK>>
+  --
+  *claim_id : integer <<FK>>
+  *admin_id : integer <<FK>>
+  admin_notes : text
+  *status : string (Disetujui/Ditolak)
+  *verified_at : timestamp
+  *created_at : timestamp
+  *updated_at : timestamp
+}
+
+
+' Definisi Relasi
+users ||--|{ items
+users ||--|{ claims
+
+categories ||--|{ items
+
+items ||--|{ claims
+
+verifications ||--|| claims
+verifications }|--|| users
+
+@enduml

@@ -1,31 +1,25 @@
-const { DataTypes } = require('sequelize');
-const db = require('../../config/database');
-
-const User = db.define('User', {
-  nama: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  email: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true
-  },
-  role: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  nim: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  password: {
-    type: DataTypes.STRING,
-    allowNull: false
+'use strict';
+const { Model } = require('sequelize');
+module.exports = (sequelize, DataTypes) => {
+  class User extends Model {
+    static associate(models) {
+      User.hasMany(models.Item, { foreignKey: 'user_id' });
+      User.hasMany(models.Claim, { foreignKey: 'user_id' });
+      User.hasMany(models.Verification, { foreignKey: 'admin_id' });
+    }
   }
-}, {
-  tableName: 'Users',
-  timestamps: true
-});
-
-module.exports = User;
+  User.init({
+    name: { type: DataTypes.STRING, allowNull: false },
+    email: { type: DataTypes.STRING, allowNull: false, unique: true },
+    nim: { type: DataTypes.STRING, allowNull: false, unique: true },
+    password: { type: DataTypes.TEXT, allowNull: false },
+    role: { type: DataTypes.STRING, allowNull: false, defaultValue: 'Mahasiswa' },
+    profile_picture: { type: DataTypes.TEXT, allowNull: true }
+  }, {
+    sequelize,
+    modelName: 'User',
+    tableName: 'users',
+    underscored: true,
+  });
+  return User;
+};
