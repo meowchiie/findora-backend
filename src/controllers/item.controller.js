@@ -1,5 +1,6 @@
 const ItemService = require("../services/item.service");
 const { matchedData } = require("express-validator");
+const {Item, Claim} = require("../models")
 
 class ItemController {
     static async create(req, res) {
@@ -12,7 +13,7 @@ class ItemController {
             if (req.file) {
                 // req.file.filename akan mengambil nama file yang di-generate Multer 
                 // (contoh: lost-item-1718000000.jpg)
-                validatedData.photo_path = req.file.filename; 
+                validatedData.photo_path = "/uploads/items/" + req.file.filename; 
             }
 
             // 3. Sekarang validatedData sudah lengkap (termasuk photo_path), kirim ke Service
@@ -28,16 +29,78 @@ class ItemController {
         }
     }
 
+    static async getDashboardStats(req, res) {
+    try {
+      // Menghitung total laporan hilang
+      const totalLost = await Item.count({ 
+        where: { type: 'hilang' } 
+      });
+
+      // Menghitung total laporan ditemukan
+      const totalFound = await Item.count({ 
+        where: { type: 'ditemukan' } 
+      });
+
+      // Menghitung total klaim yang berhasil (asumsi Anda memiliki model Claim dan kolom status)
+      // Sesuaikan 'Disetujui' atau 'Selesai' dengan struktur database Anda
+      const successfulClaims = await Claim.count({ 
+        where: { status: 'Disetujui' } 
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          totalLost,
+          totalFound,
+          successfulClaims
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Gagal mengambil statistik dashboard",
+        error: error.message
+      });
+    }
+  }
+
     static async getAll(req, res) {
         try {
-            const { type } = req.query;
-            const filter = {};
-            if (type && ['hilang', 'ditemukan'].includes(type)) filter.type = type;
+        // 1. Ambil query parameter untuk pagination (berikan default jika tidak ada)
+        const page = req.query.page || 1;
+        const limit = req.query.limit || 10;
 
-            const result = await ItemService.findAll(filter);
-            return res.status(200).json({ success: true, data: result });
+        // 2. Ambil query parameter untuk filter data (Opsional: tangkap apa pun yang dibutuhkan)
+        const filter = {};
+        
+        // Contoh penerapan filter dinamis dari query (misal: ?type=hilang&status=Ditemukan)
+        if (req.query.type) filter.type = req.query.type;
+        if (req.query.status) filter.status = req.query.status;
+        if (req.query.category_id) filter.category_id = req.query.category_id;
+
+        // 3. Panggil service dengan menyertakan filter, page, dan limit
+        const result = await ItemService.findAll(filter, page, limit);
+
+        // 4. Kembalikan response sukses beserta metadata pagination
+        return res.status(200).json({
+            success: true,
+            message: "Berhasil mengambil data item",
+            meta: {
+            totalItems: result.totalItems,
+            totalPages: result.totalPages,
+            currentPage: result.currentPage
+            },
+            data: result.data // ini berisi array 'rows' dari service
+        });
+
         } catch (error) {
-            return res.status(500).json({ success: false, message: error.message });
+        console.error("Error di getAllItems:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Terjadi kesalahan pada server saat mengambil data",
+            error: error.message
+        });
         }
     }
 
