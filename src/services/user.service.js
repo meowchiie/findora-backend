@@ -51,6 +51,68 @@ class UserService {
         return { user, token };
     }
 
+    // Tambahkan di dalam class UserService
+
+    static async getAllUsers(page, limit, search) {
+        const offset = (page - 1) * limit;
+        const whereClause = {};
+
+        if (search) {
+            whereClause[Op.or] = [
+                { name: { [Op.like]: `%${search}%` } },
+                { nim: { [Op.like]: `%${search}%` } },
+                { email: { [Op.like]: `%${search}%` } }
+            ];
+        }
+
+        const { count, rows } = await User.findAndCountAll({
+            where: whereClause,
+            limit: limit,
+            offset: offset,
+            attributes: ['id', 'name', 'email', 'nim', 'role', 'status'],
+            order: [['id', 'DESC']]
+        });
+
+        // Hitung statistik riil dari database untuk kartu informasi
+        const totalMahasiswa = await User.count({ where: { role: 'Mahasiswa' } });
+        const totalDosen = await User.count({ where: { role: 'Dosen' } });
+        const totalStaff = await User.count({ where: { role: 'Staff' } });
+
+        return {
+            users: rows,
+            stats: { totalMahasiswa, totalDosen, totalStaff, totalUsers: count },
+            pagination: {
+                totalItems: count,
+                totalPages: Math.ceil(count / limit),
+                currentPage: page
+            }
+        };
+    }
+
+    static async adminCreate(payload) {
+        // Enkripsi password default/baru yang ditentukan admin
+        const salt = await bcrypt.genSalt(10);
+        payload.password = await bcrypt.hash(payload.password, salt);
+        payload.status = payload.status || 'Aktif';
+
+        return await User.create(payload);
+    }
+
+    static async adminUpdate(id, payload) {
+        const user = await User.findByPk(id);
+        if (!user) throw new Error("User tidak ditemukan!");
+        
+        await user.update(payload);
+        return user;
+    }
+
+    static async adminDelete(id) {
+        const user = await User.findByPk(id);
+        if (!user) throw new Error("User tidak ditemukan!");
+        
+        return await user.destroy();
+    }
+
     static async getProfile(id) {
         const user = await User.findByPk(id, {
             attributes: ['id', 'name', 'email', 'nim', 'role', 'profile_picture'] 

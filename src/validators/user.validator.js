@@ -36,4 +36,29 @@ const updateProfileValidator = [
     handleValidationErrors
 ];
 
-module.exports = { registerValidator, loginValidator, updateProfileValidator };
+const adminCreateValidator = [
+    body('name').notEmpty().withMessage('Nama lengkap tidak boleh kosong'),
+    body('email').isEmail().withMessage('Format email tidak valid'),
+    body('nim').notEmpty().withMessage('NIM / NIP tidak boleh kosong'),
+    body('role').isIn(['Mahasiswa', 'Staff', 'Dosen', 'Admin']).withMessage('Role harus Mahasiswa, Staff, Dosen, atau Admin'),
+    body('password').isLength({ min: 6 }).withMessage('Password minimal 6 karakter'),
+    body('status').optional().isIn(['Aktif', 'Nonaktif']),
+    handleValidationErrors
+];
+
+const adminUpdateValidator = [
+    body('name').notEmpty().withMessage('Nama tidak boleh kosong'),
+    body('email').isEmail().withMessage('Format email tidak valid'),
+    body('nim').notEmpty().withMessage('NIM / NIP tidak boleh kosong'),
+    body('role').isIn(['Mahasiswa', 'Staff', 'Dosen', 'Admin']).withMessage('Role tidak valid'),
+    body('status').isIn(['Aktif', 'Nonaktif']).withMessage('Status tidak valid'),
+    handleValidationErrors
+];
+
+module.exports = { 
+    registerValidator, 
+    loginValidator, 
+    updateProfileValidator, 
+    adminCreateValidator, 
+    adminUpdateValidator
+};

@@ -14,12 +14,19 @@ module.exports = (sequelize, DataTypes) => {
     nim: { type: DataTypes.STRING, allowNull: false, unique: true },
     password: { type: DataTypes.TEXT, allowNull: false },
     role: { type: DataTypes.STRING, allowNull: false, defaultValue: 'Mahasiswa' },
-    profile_picture: { type: DataTypes.TEXT, allowNull: true }
+    profile_picture: { type: DataTypes.TEXT, allowNull: true },
+
+    status: { 
+      type: DataTypes.STRING, 
+      allowNull: false, 
+      defaultValue: 'Aktif' 
+    }
   }, {
     sequelize,
     modelName: 'User',
     tableName: 'users',
     underscored: true,
+    paranoid: true,
   });
   return User;
 };
