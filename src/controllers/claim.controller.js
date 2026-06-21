@@ -23,10 +23,29 @@ class ClaimController {
 
     static async getAll(req, res) {
         try {
-            // Jika yang login Mahasiswa, tampilkan klaim miliknya saja. Jika Admin, tampilkan semua.
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 3;
+            
+            // 🛠️ TANGKAP FILTER DARI FRONTEND DI SINI:
+            const { status, category_id } = req.query; 
+
+            // Filter hak akses role tetap dipertahankan
             const filter = req.user.role === 'Admin' ? {} : { user_id: req.user.id };
-            const result = await ClaimService.getAll(filter);
-            return res.status(200).json({ success: true, data: result });
+
+            // Oper semua parameter filter ke Service layer
+            const { claims, totalItems, totalPages, currentPage } = await ClaimService.getAll(
+                filter, 
+                page, 
+                limit, 
+                status, 
+                category_id
+            );
+
+            return res.status(200).json({ 
+                success: true, 
+                data: claims,
+                pagination: { totalItems, totalPages, currentPage, limit }
+            });
         } catch (error) {
             return res.status(500).json({ success: false, message: error.message });
         }

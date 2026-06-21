@@ -13,4 +13,30 @@ const validateVerification = [
     }
 ];
 
-module.exports = { validateVerification };
+const bulkVerificationValidator = [
+    body('claim_ids')
+        .isArray({ min: 1 }).withMessage('claim_ids harus berupa array dan minimal berisi 1 ID laporan.'),
+    body('claim_ids.*')
+        .notEmpty().withMessage('ID laporan di dalam array tidak boleh kosong.'),
+    body('status')
+        .optional()
+        .isIn(['Diverifikasi', 'Ditolak', 'Disetujui']).withMessage('Status tidak valid (Gunakan: Diverifikasi/Ditolak/Disetujui).'),
+    body('notes')
+        .optional()
+        .isString().withMessage('Catatan harus berupa teks.')
+];
+
+const validateResult = (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ 
+            success: false, 
+            message: "Validasi gagal", 
+            errors: errors.array().map(err => err.msg) 
+        });
+    }
+    next();
+};
+
+module.exports = { validateVerification, bulkVerificationValidator,
+    validateResult };
