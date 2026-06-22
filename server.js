@@ -7,6 +7,8 @@ const { Op } = require('sequelize'); // 💡 KOREKSI: Pindahkan ke paling atas a
 const db = require('./config/database');
 const User = require('./src/models/user');
 
+// Test
+
 // Import Routes
 const userRoutes = require("./src/routes/user.routes");
 const categoryRoutes = require("./src/routes/category.routes");
