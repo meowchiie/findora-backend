@@ -1,6 +1,7 @@
 const ItemService = require("../services/item.service");
 const { matchedData } = require("express-validator");
-const {Item, Claim} = require("../models")
+const {Item, Claim} = require("../models");
+const { Op } = require("sequelize");
 
 class ItemController {
     static async create(req, res) {
@@ -78,6 +79,9 @@ class ItemController {
         if (req.query.type) filter.type = req.query.type;
         if (req.query.status) filter.status = req.query.status;
         if (req.query.category_id) filter.category_id = req.query.category_id;
+        if (req.query.search) {
+            filter.name = { [Op.like]: `%${req.query.search}%` }; 
+        }
 
         // 3. Panggil service dengan menyertakan filter, page, dan limit
         const result = await ItemService.findAll(filter, page, limit);

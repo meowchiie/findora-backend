@@ -11,6 +11,7 @@ const User = require('./src/models/user');
 const userRoutes = require("./src/routes/user.routes");
 const categoryRoutes = require("./src/routes/category.routes");
 const itemRoutes = require("./src/routes/item.routes");
+const dashboardRoutes = require("./src/routes/dashboard.routes");
 const claimRoutes = require("./src/routes/claim.routes");
 const verificationRoutes = require("./src/routes/verification.routes");
 
@@ -56,6 +57,7 @@ app.use("/api", userRoutes);
 app.use("/api/items", itemRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/claims", claimRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/verifications", verificationRoutes);
 
 

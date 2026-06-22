@@ -25,7 +25,7 @@ class ClaimService {
         // 2. Kondisi filter untuk Eager Loading tabel Items
         const itemInclude = {
             model: Item,
-            attributes: ['id', 'name', 'location', 'created_at']
+            attributes: ['id', 'name','photo_path', 'location', 'type','created_at']
         };
 
         // 🛠️ JIKA FRONTEND MENGIRIMKAN CATEGORY_ID, FILTER DI SINI:
