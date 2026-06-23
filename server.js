@@ -16,6 +16,7 @@ const itemRoutes = require("./src/routes/item.routes");
 const dashboardRoutes = require("./src/routes/dashboard.routes");
 const claimRoutes = require("./src/routes/claim.routes");
 const verificationRoutes = require("./src/routes/verification.routes");
+const activityRoutes = require("./src/routes/activity.routes");
 
 const app = express();
 
@@ -61,6 +62,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/claims", claimRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/verifications", verificationRoutes);
+app.use("/api/activities", activityRoutes);
 
 
 // =========================

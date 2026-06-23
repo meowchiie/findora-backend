@@ -68,43 +68,54 @@ class ItemController {
 
     static async getAll(req, res) {
         try {
-        // 1. Ambil query parameter untuk pagination (berikan default jika tidak ada)
-        const page = req.query.page || 1;
-        const limit = req.query.limit || 10;
+            // 1. Ambil query parameter untuk pagination (berikan default jika tidak ada)
+            const page = req.query.page || 1;
+            const limit = req.query.limit || 10;
 
-        // 2. Ambil query parameter untuk filter data (Opsional: tangkap apa pun yang dibutuhkan)
-        const filter = {};
-        
-        // Contoh penerapan filter dinamis dari query (misal: ?type=hilang&status=Ditemukan)
-        if (req.query.type) filter.type = req.query.type;
-        if (req.query.status) filter.status = req.query.status;
-        if (req.query.category_id) filter.category_id = req.query.category_id;
-        if (req.query.search) {
-            filter.name = { [Op.like]: `%${req.query.search}%` }; 
-        }
+            // 2. Ambil query parameter untuk filter data
+            const filter = {};
+            if (req.query.user_id) filter.user_id = req.query.user_id;
 
-        // 3. Panggil service dengan menyertakan filter, page, dan limit
-        const result = await ItemService.findAll(filter, page, limit);
+            if (req.query.type) filter.type = req.query.type;
+            if (req.query.category_id) filter.category_id = req.query.category_id;
+            
+            if (req.query.search) {
+                filter.name = { [Op.like]: `%${req.query.search}%` }; 
+            }
 
-        // 4. Kembalikan response sukses beserta metadata pagination
-        return res.status(200).json({
-            success: true,
-            message: "Berhasil mengambil data item",
-            meta: {
-            totalItems: result.totalItems,
-            totalPages: result.totalPages,
-            currentPage: result.currentPage
-            },
-            data: result.data // ini berisi array 'rows' dari service
-        });
+            // ==========================================
+            // REVERSE FILTER & NORMAL FILTER UNTUK STATUS
+            // ==========================================
+            if (req.query.status_not) {
+                // Menggunakan [Op.ne] untuk menghasilkan query WHERE status != 'Nilai'
+                filter.status = { [Op.ne]: req.query.status_not };
+            } else if (req.query.status) {
+                // Filter normal menggunakan (=)
+                filter.status = req.query.status;
+            }
+
+            // 3. Panggil service dengan menyertakan filter, page, dan limit
+            const result = await ItemService.findAll(filter, page, limit);
+
+            // 4. Kembalikan response sukses beserta metadata pagination
+            return res.status(200).json({
+                success: true,
+                message: "Berhasil mengambil data item",
+                meta: {
+                    totalItems: result.totalItems,
+                    totalPages: result.totalPages,
+                    currentPage: result.currentPage
+                },
+                data: result.data // ini berisi array 'rows' dari service
+            });
 
         } catch (error) {
-        console.error("Error di getAllItems:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Terjadi kesalahan pada server saat mengambil data",
-            error: error.message
-        });
+            console.error("Error di getAllItems:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Terjadi kesalahan pada server saat mengambil data",
+                error: error.message
+            });
         }
     }
 

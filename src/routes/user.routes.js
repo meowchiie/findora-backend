@@ -4,6 +4,7 @@ const UserController = require('../controllers/user.controller');
 
 const { registerValidator, loginValidator, updateProfileValidator, adminCreateValidator, adminUpdateValidator } = require('../validators/user.validator');
 const { verifyToken } = require('../middlewares/auth.middleware'); // Sesuaikan dengan middleware Anda
+const { uploadProfileMiddleware } = require('../middlewares/upload.middleware');
 
 // Authentication Routes
 router.post('/register', registerValidator, UserController.register);
@@ -12,7 +13,7 @@ router.post('/forgot-password', UserController.forgotPassword);
 
 // Profile Routes
 router.get('/profile/:id', UserController.getProfile);
-router.put('/profile/update', updateProfileValidator, UserController.updateProfile);
+router.put('/profile/update', uploadProfileMiddleware, updateProfileValidator, UserController.updateProfile);
 
 router.get('/users', verifyToken, UserController.getAllUsers);
 router.post('/users', verifyToken, adminCreateValidator, UserController.adminCreate);

@@ -12,10 +12,10 @@ const handleValidationErrors = (req, res, next) => {
 };
 
 const registerValidator = [
-    body('nama').notEmpty().withMessage('Nama lengkap tidak boleh kosong'),
+    body('name').notEmpty().withMessage('Nama lengkap tidak boleh kosong'),
     body('email').isEmail().withMessage('Format email tidak valid'),
     body('nim').notEmpty().withMessage('NIM / NIP tidak boleh kosong'),
-    body('role').isIn(['Mahasiswa', 'Admin']).withMessage('Role harus Mahasiswa atau Admin'),
+    body('role').isIn(['Mahasiswa', 'Dosen', 'Staff']).withMessage('Role harus Mahasiswa atau Admin'),
     body('password').isLength({ min: 6 }).withMessage('Password minimal 6 karakter'),
     handleValidationErrors
 ];
@@ -32,7 +32,7 @@ const updateProfileValidator = [
     body('email').isEmail().withMessage('Format email tidak valid'),
     body('nim').notEmpty().withMessage('NIM / NIP tidak boleh kosong'),
     body('passwordBaru').optional().isString(),
-    body('fotoProfil').optional().isString(),
+    // body('fotoProfil').optional().isString(),
     handleValidationErrors
 ];
 

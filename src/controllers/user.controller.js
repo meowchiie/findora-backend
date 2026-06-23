@@ -93,16 +93,23 @@ class UserController {
     }
 
     static async updateProfile(req, res) {
-        try {
-            const payload = matchedData(req);
-            await UserService.updateProfile(payload);
-            
-            return res.status(200).json({ message: "Profil Anda berhasil diperbarui di database!" });
-        } catch (error) {
-            const statusCode = error.message.includes("tidak ditemukan") ? 404 : (error.message.includes("terdaftar") ? 400 : 500);
-            return res.status(statusCode).json({ message: error.message });
-        }
-    }
+      try {
+          const payload = matchedData(req);
+          
+          // Jika ada file gambar profil yang diunggah, simpan path-nya
+          if (req.file) {
+              // Path relatif agar mudah diakses di frontend
+              payload.fotoProfil = `/uploads/profiles/${req.file.filename}`; 
+          }
+
+          await UserService.updateProfile(payload);
+          
+          return res.status(200).json({ message: "Profil Anda berhasil diperbarui di database!" });
+      } catch (error) {
+          const statusCode = error.message.includes("tidak ditemukan") ? 404 : (error.message.includes("terdaftar") ? 400 : 500);
+          return res.status(statusCode).json({ message: error.message });
+      }
+  }
 
     static async forgotPassword(req, res) {
         try {

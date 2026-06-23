@@ -1,9 +1,45 @@
-const { Item, User, Category } = require('../models');
+const { Item, User, Category, sequelize } = require('../models');
+const ActivityService = require('./activity.service');
 
 class ItemService {
   static async create(payload) {
-    if (!payload.status) payload.status = 'Menunggu'; // Default status
-    return await Item.create(payload);
+    // 1. Logika asli kamu tetap dipertahankan di paling atas
+    if (!payload.status) payload.status = 'Menunggu'; 
+
+    // 2. Jalankan transaksi Sequelize
+    const t = await sequelize.transaction();
+
+    try {
+      // 3. Simpan barang baru ke database (masukkan objek transaksi 't')
+      const newItem = await Item.create(payload, { transaction: t });
+
+      // 4. Ambil data User untuk mendapatkan nama lengkapnya
+      // Catatan: Sesuaikan 'payload.user_id' dengan nama foreign key di database kamu (misal: userId atau user_id)
+      const user = await User.findByPk(payload.user_id, { transaction: t });
+      const userName = user ? user.name : 'Seseorang';
+
+      // 5. Tentukan kalimat berdasarkan tipe laporan (Hilang / Ditemukan)
+      // Catatan: Sesuaikan 'payload.tipe_laporan' dengan kolom penanda di model kamu (misal: type, category, dll)
+      const jenisLaporan = payload.tipe_laporan === 'hilang' ? 'kehilangan' : 'menemukan';
+      const detailAktivitas = `${userName} melaporkan ${jenisLaporan} barang: ${newItem.name}`;
+
+      // 6. Catat ke tabel aktivitas
+      await ActivityService.createActivity({
+        user_id: payload.user_id,
+        detail: detailAktivitas
+      }, { transaction: t });
+
+      // Jika pembuatan barang & pencatatan aktivitas sukses, simpan permanen (Commit)
+      await t.commit();
+      
+      // Kembalikan data item yang baru dibuat seperti semula
+      return newItem;
+
+    } catch (error) {
+      // Jika salah satu proses di atas error, batalkan semua perubahan (Rollback)
+      await t.rollback();
+      throw error; // Lemparkan error ke Controller agar ditangkap oleh try-catch di sana
+    }
   }
 
   // Menambahkan parameter page dan limit dengan default value
