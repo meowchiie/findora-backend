@@ -1,16 +1,53 @@
-const { Claim, Item, User } = require('../models');
+const { Claim, Item, User, sequelize } = require('../models');
+const ActivityService = require('./activity.service');
 
 class ClaimService {
     static async create(data) {
-        // Cek dulu apakah item-nya eksis
-        const item = await Item.findByPk(data.item_id);
-        if (!item) throw new Error("Item yang ingin diklaim tidak ditemukan");
-        
-        if (item.status === 'Selesai' || item.status === 'Diklaim') {
-            throw new Error("Item ini sudah selesai diproses atau diklaim oleh orang lain");
-        }
+        // 1. Mulai Transaksi Sequelize
+        const t = await sequelize.transaction();
 
-        return await Claim.create(data);
+        try {
+            // 2. Cek dulu apakah item-nya eksis (masukkan objek transaksi 't')
+            const item = await Item.findByPk(data.item_id, { transaction: t });
+            if (!item) {
+                throw new Error("Item yang ingin diklaim tidak ditemukan");
+            }
+            
+            if (item.status === 'Selesai' || item.status === 'Diklaim') {
+                throw new Error("Item ini sudah selesai diproses atau diklaim oleh orang lain");
+            }
+
+            // 3. PERBAIKAN: Tambahkan 'await' dan masukkan ke dalam transaksi 't'
+            await item.update({ "status": "Diklaim" }, { transaction: t });
+
+            // 4. Buat data klaim baru
+            const newClaim = await Claim.create(data, { transaction: t });
+
+            // 5. Ambil nama user yang mengajukan klaim untuk log aktivitas
+            // Catatan: Pastikan di payload 'data' dari controller sudah membawa 'user_id' (req.user.id)
+            const user = await User.findByPk(data.user_id, { transaction: t });
+            const userName = user ? user.name : 'Seseorang';
+
+            // 6. Susun kalimat aktivitas sesuai contoh yang kamu inginkan
+            const detailAktivitas = `${userName} mengajukan klaim untuk barang: ${item.name}`;
+
+            // 7. Simpan log aktivitas ke database
+            await ActivityService.createActivity({
+                user_id: data.user_id, // Dicatat sebagai aktivitas milik user yang mengklaim
+                detail: detailAktivitas
+            }, { transaction: t });
+
+            // Jika semua langkah di atas berhasil tanpa error, simpan permanen (Commit)
+            await t.commit();
+
+            return newClaim;
+
+        } catch (error) {
+            // Jika ada satu saja yang gagal (misal item tidak ketemu atau gagal simpan log), 
+            // batalkan semua perubahan di atas (Rollback)
+            await t.rollback();
+            throw error; // Lemparkan error agar ditangkap oleh try-catch di Controller
+        }
     }
 
     static async getAll(filter, page, limit, status, category_id) {

@@ -1,14 +1,17 @@
 const { Sequelize } = require('sequelize');
-require('dotenv').config();
+// 1. Ambil object konfigurasi dari file config.js sebelah
+const configAll = require('./config'); 
 
-const db = new Sequelize(
-    process.env.DB_NAME,
-    process.env.DB_USER,
-    process.env.DB_PASSWORD,
-    {
-        host: process.env.DB_HOST,
-        dialect: process.env.DB_DIALECT
-    }
-);
+// 2. Deteksi mode (di Docker otomatis membaca 'production')
+const env = process.env.NODE_ENV || 'development';
+const config = configAll[env];
+
+// 3. Masukkan datanya secara dinamis ke Sequelize
+const db = new Sequelize(config.database, config.username, config.password, {
+  host: config.host,
+  dialect: config.dialect,
+  port: process.env.DB_PORT || 3306,
+  logging: false // Ubah ke console.log jika ingin melihat log query SQL
+});
 
 module.exports = db;

@@ -122,7 +122,7 @@ class UserService {
     }
 
     static async updateProfile(payload) {
-        const { id, name, email, nim, passwordBaru, fotoProfil } = payload;
+        const { id, nama, email, nim, passwordBaru, fotoProfil } = payload;
         const user = await User.findByPk(id);
 
         if (!user) throw new Error("User tidak ditemukan!");
@@ -132,7 +132,7 @@ class UserService {
             if (emailCheck) throw new Error("Email baru sudah terdaftar oleh pengguna lain!");
         }
 
-        let dataToUpdate = { name, email, nim, profile_picture: fotoProfil };
+        let dataToUpdate = { name: nama, email, nim, profile_picture: fotoProfil };
 
         if (passwordBaru && passwordBaru.trim() !== "") {
             const salt = await bcrypt.genSalt(10);

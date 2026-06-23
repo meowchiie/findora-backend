@@ -93,4 +93,28 @@ const handleMulterError = (err, res, next) => {
     return res.status(500).json({ success: false, message: err.message });
 };
 
-module.exports = { uploadItemMiddleware, uploadClaimMiddleware };
+// ==========================================
+// 3. KONFIGURASI UNTUK FOTO PROFIL
+// ==========================================
+const profileStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadDir = path.join('public', 'uploads', 'profiles');
+        createDir(uploadDir);
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `profile-${uniqueSuffix}${path.extname(file.originalname)}`);
+    }
+});
+
+const uploadProfileInstance = multer({ storage: profileStorage, limits, fileFilter });
+
+const uploadProfileMiddleware = (req, res, next) => {
+    uploadProfileInstance.single('fotoProfil')(req, res, (err) => {
+        if (err) return handleMulterError(err, res, next);
+        next();
+    });
+};
+
+module.exports = { uploadItemMiddleware, uploadClaimMiddleware , uploadProfileMiddleware};

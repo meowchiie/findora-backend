@@ -101,6 +101,36 @@ class DashboardController {
       return res.status(500).json({ success: false, message: 'Gagal mengambil data chart' + error });
     }
   }
+
+  async getGlobalStats(req, res) {
+    try {
+      // 1. Hitung total item dengan type 'hilang'
+      const totalLost = await Item.count({ where: { type: 'hilang', status: "Menunggu"} });
+      
+      // 2. Hitung total item dengan type 'ditemukan'
+      const totalFound = await Item.count({ where: { type: 'ditemukan', status: "Menunggu" } });
+      
+      // 3. Hitung klaim yang berhasil (Sesuaikan 'Disetujui' dengan enum di DB kamu, misal 'Selesai')
+      const successfulClaims = await Claim.count({ 
+        where: { status: 'Diverifikasi' } 
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          totalLost,
+          totalFound,
+          successfulClaims
+        }
+      });
+    } catch (error) {
+      console.error("Error Get Global Stats:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Gagal mengambil data statistik: ' + error.message 
+      });
+    }
+  }
 }
 
 module.exports = new DashboardController();

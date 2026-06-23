@@ -27,8 +27,6 @@ fs
     );
   })
   .forEach(file => {
-    console.log("Mencoba memuat file:", file);
-    
     const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
     db[model.name] = model;
   });

@@ -6,8 +6,8 @@
   "scripts": {
     "test": "jest --runInBand --detectOpenHandles",
     "test:coverage": "jest --runInBand --detectOpenHandles --coverage",
-    "start": "nodemon server.js",
-    "dev": "node --watch server.js"
+    "dev": "nodemon server.js",
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
