@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    container_name: findora-backend
+    ports:
+      - "5010:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - DB_HOST=database
+      - DB_PORT=3306
+      - DB_USERNAME=findora_user
+      - DB_PASSWORD=findora_secret_password
+      - DB_NAME=findora_db
+      - DB_DIALECT=mysql
+    depends_on:
+      database:
+        condition: service_healthy # Ganti baris ini agar menunggu MySQL sehat
+
+  database:
+    image: mysql:8.0
+    container_name: findora-database
+    # --- TAMBAHKAN BARIS DI BAWAH INI ---
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=super_secret_root_password
+      - MYSQL_DATABASE=findora_db
+      - MYSQL_USER=findora_user
+      - MYSQL_PASSWORD=findora_secret_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "findora_user", "-pfindora_secret_password"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  mysql_data:

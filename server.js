@@ -37,6 +37,8 @@ async function connectDatabase() {
         console.log('✅ Database connected successfully (No Sync)');
     } catch (error) {
         console.error('❌ Database not ready:', error.message);
+        console.log(process.env.DB_USERNAME);
+        console.log(process.env.DB_PASSWORD);
         console.log('🔄 Retrying connection in 5 seconds...');
         setTimeout(connectDatabase, 5000);
     }
