@@ -19,14 +19,21 @@ const validateItem = [
     async (req, res, next) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
+            // Mengamankan pembersihan file baik dari req.file maupun req.files
+            const filesToUnlink = [];
+            if (req.file) {
+                filesToUnlink.push(req.file);
+            }
             if (req.files) {
-                const filesToUnlink = [...(req.files['photo_path'] || []), ...(req.files['image'] || [])];
-                for (const file of filesToUnlink) {
-                    try {
-                        await fs.unlink(file.path);
-                    } catch (err) {
-                        console.error('[Validator Error] Gagal membersihkan file:', err.message);
-                    }
+                const multiFiles = [...(req.files['photo_path'] || []), ...(req.files['image'] || [])];
+                filesToUnlink.push(...multiFiles);
+            }
+
+            for (const file of filesToUnlink) {
+                try {
+                    await fs.unlink(file.path);
+                } catch (err) {
+                    console.error('[Validator Error] Gagal membersihkan file:', err.message);
                 }
             }
             return res.status(400).json({
