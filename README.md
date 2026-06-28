@@ -12,4 +12,4 @@ Berikut hasilnya dengan menghapus rule untuk attribute name:
 
 Berikut adalah hasil ringkasan pengujian unit dan regresi menggunakan Jest & Supertest:
 
-![CI Status](docs/coverage.png)
+![CI Status](docs/coverage-2.png)
